@@ -1,29 +1,18 @@
 import React from "react";
-import { FcGoogle } from "react-icons/fc";
-import { googleProvider } from "../config/firebase";
-import {
-  createUserWithEmailAndPassword,
-  signInWithPopup,
-  getAuth,
-  sendEmailVerification,
-} from "firebase/auth";
+import axios from "axios";
 import { GridLoader } from "react-spinners";
-import { getFirestore, collection, addDoc } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import { firebaseConfig } from "../config/firebase";
-import { uploadBytes, getStorage, ref } from "firebase/storage";
-import { toast, Toaster } from "react-hot-toast";
-// import { useState } from "react";
-import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import useState from "react-usestateref";
-// import useStateRef from "react-usestateref";
+import { toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 export default function Login() {
   return (
     <>
       <div className="flex h-full w-full flex-col items-center justify-center bg-[url('/static/images/back_img.jpg')] bg-cover bg-fixed bg-center p-2">
-        <div className="flex flex-col items-center justify-center h-full w-full">
+        <ToastContainer />
+        <div className="flex h-full w-full flex-col items-center justify-center">
           <HomeBtn />
           <SignUp />
         </div>
@@ -33,283 +22,68 @@ export default function Login() {
 }
 
 function SignUp() {
-  const firebaseApp = initializeApp(firebaseConfig);
-  const firestore = getFirestore(firebaseApp);
-  const storage = getStorage(firebaseApp);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [naam, setNaam] = useState("");
   const [mob, setMob] = useState("");
   const [roll, setRoll] = useState("");
   const [branch, setBranch] = useState("");
-  const [poster, setPoster] = useState("");
-  const auth = getAuth();
-  const navigate = useNavigate();
+  const [poster, setPoster] = useState(null); // Changed to null for FormData handling
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [spin, setSpin, spinRef] = useState(false);
-
-  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isValidMobile = (mobile) => /^[0-9]{10}$/.test(mobile);
+  const navigate = useNavigate();
 
   const signUp = async () => {
     setSpin(true);
     try {
-      if (
-        naam !== "" &&
-        isValidMobile(mob) &&
-        roll !== "" &&
-        branch !== "" &&
-        poster !== "" &&
-        password !=="" &&
-        isValidEmail(email)
-      ) {
-        const imgref = ref(
-          storage,
-          `uploads/users/${Date.now()}-${poster.name}`,
-        );
-        const uploadResult = await uploadBytes(imgref, poster);
-
-        await createUserWithEmailAndPassword(auth, email, password);
-        const user = auth.currentUser;
-        const uid = user.uid;
-        const emailid = user.email;
-        await sendEmailVerification(user);
-        Swal.fire({
-          title: "Verify your account!",
-          text: `Email Verification Link sent to ${emailid}`,
-          icon: "warning",
-          confirmButtonText: "OK",
-        });
-        setTimeout(async () => {
-          await addDoc(collection(firestore, "users"), {
-            naam,
-            mob,
-            roll,
-            branch,
-            imageURL: uploadResult.ref.fullPath,
-            emailid,
-            uid,
-          });
-
-          Swal.fire({
-            title: "GOOD JOB! NOW LOGIN",
-            text: `Welcome BITIAN, ${naam}! Please check your email for verification.`,
-            icon: "success",
-            confirmButtonText: "Continue Logging in",
-          });
-
-          setTimeout(() => {
-            navigate("/dashboard");
-          }, 1000);
-        }, 1000);
-      } else {
-        if (naam === "") {
-          Swal.fire({
-            title: "Error! Name field is empty",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        }
-
-        if (mob === "") {
-          Swal.fire({
-            title: "Error! Mobile field is empty",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        } else if (!isValidMobile(mob)) {
-          Swal.fire({
-            title: "Invalid Mobile Number",
-            text: "Please enter a valid 10-digit mobile number",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        }
-
-        if (roll === "") {
-          Swal.fire({
-            title: "Error! Roll field is empty",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        }
-
-        if (branch === "") {
-          Swal.fire({
-            title: "Error! Branch field is empty",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        }
-
-        if (poster === "") {
-          Swal.fire({
-            title: "Error! Poster field is empty",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        }
-
-        if (email === "") {
-          Swal.fire({
-            title: "Error! Email field is empty",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        } else if (!isValidEmail(email)) {
-          Swal.fire({
-            title: "Invalid Email Address",
-            text: "Please enter a valid email address",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        }
-        if (password === "") {
-          Swal.fire({
-            title: "Error! Pssword field is empty",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        }
-      }
+      const formData = new FormData();
+      formData.append("fullName", naam);
+      formData.append("mobile", mob);
+      formData.append("roll", roll);
+      formData.append("branch", branch);
+      formData.append("email", email);
+      formData.append("password", password);
+      formData.append("idCard", poster);
+      const res = await axios.post("/api/v1/users/register", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Accept: "application/json",
+        },
+      });
+      console.log(res.data);
+      toast.success("Signup successful now login using same credentials");
+      setTimeout(() => {
+        navigate("/signin");
+      }, 2000);
     } catch (error) {
-      console.error("Error signing up:", error.message);
-      toast.error("Account already exists or invalid emailid");
-    }
-    setSpin(false);
-  };
-
-  const signInWithGoogle = async () => {
-    try {
-      if (
-        naam !== "" &&
-        isValidMobile(mob) &&
-        roll !== "" &&
-        branch !== "" &&
-        poster !== ""
-      ) {
-        const imgref = ref(
-          storage,
-          `uploads/users/${Date.now()}-${poster.name}`,
+      if (error.response && error.response.data) {
+        const htmlDoc = new DOMParser().parseFromString(
+          error.response.data,
+          "text/html",
         );
-        const uploadResult = await uploadBytes(imgref, poster);
-
-        await signInWithPopup(auth, googleProvider);
-        const user = auth.currentUser;
-        const uid = user.uid;
-        const emailid = user.email;
-
-        await addDoc(collection(firestore, "users"), {
-          naam,
-          mob,
-          roll,
-          branch,
-          imageURL: uploadResult.ref.fullPath,
-          emailid,
-          uid,
-        });
-
-        Swal.fire({
-          title: "GOOD JOB!",
-          text: `Welcome BITIAN`,
-          icon: "success",
-          confirmButtonText: "Continue Logging in",
-        });
-
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1000);
+        const errorElement = htmlDoc.querySelector("body");
+        if (errorElement) {
+          const errorMessage = errorElement.textContent.trim();
+          const errormsg = errorMessage.split("at")[0].trim();
+          console.log(errormsg);
+          toast.error(errormsg);
+        } else {
+          console.log("Error: An unknown error occurred");
+          toast.error("An unknown error occurred");
+        }
       } else {
-        if (naam === "") {
-          Swal.fire({
-            title: "Error! Name field is empty",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        }
-
-        if (mob === "") {
-          Swal.fire({
-            title: "Error! Mobile field is empty",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        } else if (!isValidMobile(mob)) {
-          Swal.fire({
-            title: "Invalid Mobile Number",
-            text: "Please enter a valid 10-digit mobile number",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        }
-
-        if (roll === "") {
-          Swal.fire({
-            title: "Error! Roll field is empty",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        }
-
-        if (branch === "") {
-          Swal.fire({
-            title: "Error! Branch field is empty",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        }
-
-        if (poster === "") {
-          Swal.fire({
-            title: "Error! Poster field is empty",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        }
-
-        if (email === "") {
-          Swal.fire({
-            title: "Error! Email field is empty",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        } else if (!isValidEmail(email)) {
-          Swal.fire({
-            title: "Invalid Email Address",
-            text: "Please enter a valid email address",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        }
-        if (password === "") {
-          Swal.fire({
-            title: "Error! Pssword field is empty",
-            icon: "error",
-            confirmButtonText: "OK",
-          });
-        }
+        console.log("Error:", error.message);
+        toast.error("Error occurred during signup");
       }
-    } catch (error) {
-      console.error("Error signing in with google:", error.message);
-      toast.error("Account already exists or invalid emailid");
+    } finally {
+      setSpin(false);
     }
   };
-
   return (
     <div className="h-[50rem] w-[25rem] rounded-3xl bg-white bg-opacity-20 lg:w-[40%]">
-      <Toaster />
       <div className="flex h-full flex-col items-center justify-evenly">
         <h1 className="text bg-transparent bg-clip-text p-2 text-4xl font-bold text-white">
           Create Account
         </h1>
-        {spinRef.current && (
-            <GridLoader
-              color={`#54236D`}
-              loading={spinRef.current}
-              // cssOverride={override}
-              className="absolute z-20 bg- m-auto w-screen"
-              size={100}
-            />
-          )}  
         <input
           type="text"
           placeholder="Enter Full Name"
@@ -363,15 +137,15 @@ function SignUp() {
           autoComplete="current-password"
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button className="p-2 text-white" onClick={signUp}>
-          Sign Up
-        </button>
-        <div className="flex gap-3">
-          <FcGoogle className="google-icon" />
-          <button className=" text-white shadow-2xl" onClick={signInWithGoogle}>
-            Continue with<span className="bg-transparent"> Google</span>
+        {spin ? (
+          <div className="flex w-full items-center justify-center">
+            <GridLoader color="#000" />
+          </div>
+        ) : (
+          <button className="p-2 text-white" onClick={signUp}>
+            Sign Up
           </button>
-        </div>
+        )}
 
         <Link to="/signin">
           <button className="p-2 text-xl text-white hover:shadow-white">
@@ -382,7 +156,6 @@ function SignUp() {
     </div>
   );
 }
-
 function HomeBtn() {
   function refreshPage() {
     setTimeout(() => {
