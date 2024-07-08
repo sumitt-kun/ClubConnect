@@ -3,13 +3,24 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 const userSchema = new Schema(
   {
-    username: {
+    fullName: {
       type: String,
       required: true,
-      unique: true,
-      lowercase: true,
       trim: true,
       index: true,
+    },
+
+    mobile: {
+      type: String,
+      required: [true, "Mobile number is required"],
+    },
+    roll: {
+      type: String,
+      required: [true, "Roll number is required"],
+    },
+    branch: {
+      type: String,
+      required: [true, "Branch is required"],
     },
     email: {
       type: String,
@@ -17,13 +28,9 @@ const userSchema = new Schema(
       unique: true,
       lowercase: true,
       trim: true,
-    },
-    fullName: {
-      type: String,
-      required: true,
-      trim: true,
       index: true,
     },
+
     avatar: {
       type: String, //cloudinary url
       required: true,
