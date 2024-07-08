@@ -1,0 +1,10 @@
+{
+  "manifest_version": 2,
+  "name": "ClubConnect News-Extension",
+  "version": "2.0",
+  "description": "Fetches and displays news from ClubConnect API.",
+  "permissions": ["https://clubconnect.onrender.com/api/v1/news/getNews"],
+  "browser_action": {
+    "default_popup": "index.html"
+  }
+}
