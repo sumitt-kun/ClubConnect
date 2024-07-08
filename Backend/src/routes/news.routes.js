@@ -7,6 +7,6 @@ router
   .route("/addNews")
   .post(verifyAdmin, upload.fields([{ name: "poster", maxCount: 1 }]), addNews);
 
-router.route("/getNews").get(verifyJWT, getNews);
+router.route("/getNews").get(getNews);
 
 export default router;
