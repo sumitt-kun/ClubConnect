@@ -11,6 +11,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": "http://localhost:8000",
+      // "/api": "https://clubconnect.onrender.com",
     },
   },
   plugins: [react()],
