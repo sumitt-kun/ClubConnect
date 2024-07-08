@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import { getFirestore, collection, addDoc } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
-import { firebaseConfig } from "../config/firebase";
+import axios from "axios";
 import Navfunc from "./Dashnav";
 import Swal from "sweetalert2";
 
@@ -11,18 +9,13 @@ function Navigator() {
 }
 
 export default function Recruit() {
-  const user = JSON.parse(localStorage.getItem("user"));
-  const [club, setclub] = useState("");
-  const [name, setname] = useState("");
-  const datetime = getCurrentDateTime();
-  const [phone, setphone] = useState("");
-  const [branch, setbranch] = useState("");
-  const [message, setmessage] = useState("");
-  const [roll, setroll] = useState("");
-  const [batch, setbatch] = useState("");
-  const email = user?.user?.email;
-  const firebaseApp = initializeApp(firebaseConfig);
-  const firestore = getFirestore(firebaseApp);
+  const [club, setClub] = useState("");
+  const [name, setName] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [roll, setRoll] = useState("");
+  const [branch, setBranch] = useState("");
+  const [reason, setReason] = useState("");
+  const [batch, setBatch] = useState("");
 
   function getCurrentDateTime() {
     const today = new Date();
@@ -34,144 +27,165 @@ export default function Recruit() {
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
-  const isValidPhone = (phone) => /^[0-9]{10}$/.test(phone);
-  const isValidRoll = (roll) => /^BTECH\/10\d{3}\/\d{2}$/.test(roll);
-  const isValidBatch = (batch) => /^[A-Za-z0-9]+$/.test(batch);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  const addPost = async () => {
-    if (!isValidPhone(phone)) {
+    if (!club || !name || !mobile || !roll || !branch || !reason || !batch) {
       Swal.fire({
-        title: "Invalid Phone Number",
-        text: "Please enter a valid 10-digit phone number.",
+        title: "Missing Fields",
+        text: "All fields are required.",
         icon: "error",
         confirmButtonText: "OK",
       });
       return;
     }
-
-    if (!isValidBatch(batch)) {
-      Swal.fire({
-        title: "Invalid Batch",
-        text: "Please enter a valid batch (alphanumeric characters only).",
-        icon: "error",
-        confirmButtonText: "OK",
-      });
-      return;
-    }
-
-    await addDoc(collection(firestore, club), {
-      email,
-      name,
-      datetime,
-      phone,
-      branch,
-      message,
-      roll,
-      batch,
-    });
-
-    console.log(
-      email,
+    const formData = {
+      user: name,
       club,
-      name,
-      datetime,
-      phone,
-      branch,
-      message,
+      mobile,
       roll,
-      batch
-    );
+      branch,
+      reason,
+      batch,
+    };
 
-    Swal.fire({
-      title: "Application Received",
-      text: "Try your best in the Tests",
-      icon: "success",
-      confirmButtonText: "OK",
-    });
+    try {
+      const response = await axios.post(
+        "/api/v1/users/addRecruitment",
+        formData,
+      );
 
-    console.log("data added");
+      console.log("API Response:", response.data);
+      setClub("");
+      setName("");
+      setMobile("");
+      setRoll("");
+      setBranch("");
+      setReason("");
+      setBatch("");
+
+      Swal.fire({
+        title: "Application Submitted",
+        text: "Your application has been submitted successfully.",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      Swal.fire({
+        title: "Error",
+        text: "An error occurred while submitting your application. Please try again later.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
   };
 
   return (
     <div className="flex h-screen w-full flex-col items-center justify-center bg-[url('/static/images/back_img.jpg')] bg-cover bg-fixed bg-center">
       <div className="h-[35rem] w-[25rem] rounded-3xl bg-white bg-opacity-20">
-        <div className="flex h-full flex-col items-left justify-evenly m-5">
-          <h1 className="text-white text-4xl font-bold text-center">JOIN CLUBS</h1>
+        <div className="items-left m-5 flex h-full flex-col justify-evenly">
+          <h1 className="text-center text-4xl font-bold text-white">
+            JOIN CLUBS
+          </h1>
 
-          <label htmlFor="club" className="text-white text-lg">Select a Club:</label>
-          <select
-            id="club"
-            className="rounded-xl p-1 text-center bg-[url('/static/images/newsroom.jpeg')] bg-no-repeat bg-center bg-cover bg-fixed"
-            onChange={(e) => setclub(e.target.value)}
-          >
-            <option value="">Select a Club</option>
-            <option value="ietbit">IET</option>
-            <option value="ieeebit">IEEE</option>
-            <option value="acmbit">ACM</option>
-            <option value="ietebit">IETE</option>
-          </select>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <label htmlFor="club" className="text-lg text-white">
+              Select a Club:
+            </label>
+            <select
+              id="club"
+              value={club}
+              onChange={(e) => setClub(e.target.value)}
+              className="rounded-xl bg-[url('/static/images/newsroom.jpeg')] bg-cover bg-fixed bg-center bg-no-repeat p-1 text-center"
+            >
+              <option value="">Select a Club</option>
+              <option value="ietbit">IET</option>
+              <option value="ieeebit">IEEE</option>
+              <option value="acmbit">ACM</option>
+              <option value="ietebit">IETE</option>
+            </select>
 
-          <label htmlFor="name" className="text-white text-lg">Enter Name:</label>
-          <input
-            type="text"
-            id="name"
-            placeholder="Enter Name"
-            className="rounded-xl p-1 text-center bg-[url('/static/images/newsroom.jpeg')] bg-no-repeat bg-center bg-cover bg-fixed"
-            onChange={(e) => setname(e.target.value)}
-          />
+            <label htmlFor="name" className="text-lg text-white">
+              Enter Name:
+            </label>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter Name"
+              className="rounded-xl bg-[url('/static/images/newsroom.jpeg')] bg-cover bg-fixed bg-center bg-no-repeat p-1 text-center"
+            />
 
-          <label htmlFor="phone" className="text-white text-lg">Contact No:</label>
-          <input
-            type="text"
-            id="phone"
-            placeholder="Contact No"
-            className="rounded-xl p-1 text-center bg-[url('/static/images/newsroom.jpeg')] bg-no-repeat bg-center bg-cover bg-fixed"
-            onChange={(e) => setphone(e.target.value)}
-          />
+            <label htmlFor="mobile" className="text-lg text-white">
+              Contact Number:
+            </label>
+            <input
+              type="text"
+              id="mobile"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
+              placeholder="Contact Number"
+              className="rounded-xl bg-[url('/static/images/newsroom.jpeg')] bg-cover bg-fixed bg-center bg-no-repeat p-1 text-center"
+            />
 
-          <label htmlFor="roll" className="text-white text-lg">BTECH/10XXX/XX:</label>
-          <input
-            type="text"
-            id="roll"
-            placeholder="BTECH/10XXX/XX"
-            className="rounded-xl p-1 text-center bg-[url('/static/images/newsroom.jpeg')] bg-no-repeat bg-center bg-cover bg-fixed"
-            onChange={(e) => setroll(e.target.value)}
-          />
+            <label htmlFor="roll" className="text-lg text-white">
+              BTECH/10XXX/XX:
+            </label>
+            <input
+              type="text"
+              id="roll"
+              value={roll}
+              onChange={(e) => setRoll(e.target.value)}
+              placeholder="BTECH/10XXX/XX"
+              className="rounded-xl bg-[url('/static/images/newsroom.jpeg')] bg-cover bg-fixed bg-center bg-no-repeat p-1 text-center"
+            />
 
-          <label htmlFor="branch" className="text-white text-lg">Branch:</label>
-          <input
-            type="text"
-            id="branch"
-            placeholder="Branch"
-            className="rounded-xl p-1 text-center bg-[url('/static/images/newsroom.jpeg')] bg-no-repeat bg-center bg-cover bg-fixed"
-            onChange={(e) => setbranch(e.target.value)}
-          />
+            <label htmlFor="branch" className="text-lg text-white">
+              Branch:
+            </label>
+            <input
+              type="text"
+              id="branch"
+              value={branch}
+              onChange={(e) => setBranch(e.target.value)}
+              placeholder="Branch"
+              className="rounded-xl bg-[url('/static/images/newsroom.jpeg')] bg-cover bg-fixed bg-center bg-no-repeat p-1 text-center"
+            />
 
-          <label htmlFor="message" className="text-white text-lg">Why do you want to join?</label>
-          <input
-            type="text"
-            id="message"
-            placeholder="Why do you want to join?"
-            className="rounded-xl p-1 text-center bg-[url('/static/images/newsroom.jpeg')] bg-no-repeat bg-center bg-cover bg-fixed"
-            onChange={(e) => setmessage(e.target.value)}
-          />
+            <label htmlFor="reason" className="text-lg text-white">
+              Why do you want to join?
+            </label>
+            <input
+              type="text"
+              id="reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Why do you want to join?"
+              className="rounded-xl bg-[url('/static/images/newsroom.jpeg')] bg-cover bg-fixed bg-center bg-no-repeat p-1 text-center"
+            />
 
-          <label htmlFor="batch" className="text-white text-lg">Batch:</label>
-          <input
-            type="text"
-            id="batch"
-            placeholder="Batch"
-            className="rounded-xl p-1 text-center bg-[url('/static/images/newsroom.jpeg')] bg-no-repeat bg-center bg-cover bg-fixed"
-            onChange={(e) => setbatch(e.target.value)}
-          />
+            <label htmlFor="batch" className="text-lg text-white">
+              Batch:
+            </label>
+            <input
+              type="text"
+              id="batch"
+              value={batch}
+              onChange={(e) => setBatch(e.target.value)}
+              placeholder="Batch"
+              className="rounded-xl bg-[url('/static/images/newsroom.jpeg')] bg-cover bg-fixed bg-center bg-no-repeat p-1 text-center"
+            />
 
-          <button
-            className="mx-auto my-2 text-white w-full rounded-xl border-2 bg-gradient-to-r from-red-700 to-pink-800 py-2
-                text-center hover:opacity-80 md:text-2xl"
-            onClick={addPost}
-          >
-            Submit
-          </button>
+            <button
+              type="submit"
+              className="mx-auto my-2 w-full rounded-xl border-2 bg-gradient-to-r from-red-700 to-pink-800 py-2 text-center
+                text-white hover:opacity-80 md:text-2xl"
+            >
+              Submit
+            </button>
+          </form>
         </div>
       </div>
     </div>

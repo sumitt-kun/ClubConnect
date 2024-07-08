@@ -26,7 +26,7 @@ function SignUp() {
   const [mob, setMob] = useState("");
   const [roll, setRoll] = useState("");
   const [branch, setBranch] = useState("");
-  const [poster, setPoster] = useState(null); // Changed to null for FormData handling
+  const [poster, setPoster] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [spin, setSpin, spinRef] = useState(false);

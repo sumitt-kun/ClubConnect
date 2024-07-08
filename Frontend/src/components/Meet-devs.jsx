@@ -1,19 +1,20 @@
 import React from "react";
 import dev_details from "../developer_details";
-import { FaInstagram } from "react-icons/fa";
-import { FaLinkedin } from "react-icons/fa";
-import { FaExternalLinkAlt } from "react-icons/fa";
-import { FaGithub } from "react-icons/fa";
-import { FaCode } from "react-icons/fa";
+import { FaInstagram, FaLinkedin, FaGithub, FaCode } from "react-icons/fa";
+
 function Meetdev() {
   return (
-    <div id="developersSection" className="my-20 bg-[url('/static/images/img-bg.jpg')]">
+    <div
+      id="developersSection"
+      className="my-20 bg-[url('/static/images/img-bg.jpg')]"
+    >
       <p className="leading-13 mb-6 bg-gradient-to-r from-red-600 to-pink-800 p-6 text-left font-serif text-4xl text-white md:text-6xl">
         Meet The Developers
       </p>
-      <div className="grid-cols-3 p-10 text-white md:grid">
-        {dev_details.map((ele) => (
+      <div className="flex items-center justify-center">
+        {dev_details.map((ele, index) => (
           <Card
+            key={index}
             img_url={ele.img_url}
             name={ele.name}
             insta_id={ele.insta_id}
@@ -26,35 +27,35 @@ function Meetdev() {
     </div>
   );
 }
+
 function Card(props) {
   return (
-    <div className="m-7 bg-gradient-to-r from-red-800 to-pink-800 align-middle">
-      <div className="width-full m-auto text-center">
+    <div className="m-4 rounded-lg bg-gradient-to-r from-red-800 to-pink-800 text-white shadow-lg">
+      <div className="flex flex-col items-center p-6">
         <img
           loading="lazy"
-          className="dev-img m-auto h-auto w-1/2 p-3"
+          className="dev-img h-48 w-48 rounded-full object-cover"
           src={props.img_url}
-          alt="img"
+          alt="Developer"
         />
+        <p className="mt-4 text-3xl font-semibold">{props.name}</p>
       </div>
-      <div className="text-center text-2xl font-semibold">
-        <p>{props.name}</p>
-      </div>
-      <div className="grid grid-cols-4 p-3">
-        <a className="m-auto p-2 text-2xl" href={props.insta_id}>
+      <div className="flex justify-center py-4">
+        <a className="p-4 text-3xl" href={props.insta_id}>
           <FaInstagram />
         </a>
-        <a className="m-auto p-2 text-2xl" href={props.linkedin_id}>
+        <a className="p-4 text-3xl" href={props.linkedin_id}>
           <FaLinkedin />
         </a>
-        <a className="m-auto p-2 text-2xl" href={props.contact}>
+        <a className="p-4 text-3xl" href={props.contact}>
           <FaGithub />
         </a>
-        <a className="m-auto p-2 text-2xl" href={props.portfolio}>
+        <a className="p-4 text-3xl" href={props.portfolio}>
           <FaCode />
         </a>
       </div>
     </div>
   );
 }
+
 export default Meetdev;
